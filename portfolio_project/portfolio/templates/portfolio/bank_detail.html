@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ symbol }} – Stock Analysis</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen">
+
+<header class="py-6 border-b border-gray-700 text-center">
+    <h1 class="text-3xl font-bold">{{ symbol }} – Stock Analysis</h1>
+</header>
+
+<div class="flex justify-center gap-4 mt-6">
+    <form method="get">
+        <select name="period" onchange="this.form.submit()" class="p-2 rounded text-black">
+            <option value="1mo" {% if period == "1mo" %}selected{% endif %}>1 Month</option>
+            <option value="3mo" {% if period == "3mo" %}selected{% endif %}>3 Months</option>
+            <option value="6mo" {% if period == "6mo" %}selected{% endif %}>6 Months</option>
+            <option value="1y"  {% if period == "1y"  %}selected{% endif %}>1 Year</option>
+            <option value="5y"  {% if period == "5y"  %}selected{% endif %}>5 Years</option>
+            <option value="max" {% if period == "max" %}selected{% endif %}>Max</option>
+        </select>
+    </form>
+
+    <a href="/banks/" class="px-4 py-2 bg-gray-700 rounded">← Back</a>
+</div>
+
+<div class="flex flex-col space-y-24 mt-12 px-8">
+
+    <section>
+        <h2 class="text-xl font-semibold mb-3">Price Action (Candlestick + MA)</h2>
+        <div id="price-chart" style="height:650px;"></div>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold mb-3">RSI (14)</h2>
+        <div id="rsi-chart" style="height:300px;"></div>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold mb-3">Relative Strength vs NIFTY</h2>
+        <div id="rs-chart" style="height:300px;"></div>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold mb-3">PE Ratio Trend</h2>
+        <div id="pe-chart" style="height:300px;"></div>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold mb-3">Quarterly Revenue & Profit</h2>
+        <div id="revenue-chart" style="height:420px;"></div>
+    </section>
+
+    <section>
+        <h2 class="text-xl font-semibold mb-3">Quarterly EPS (Last 3 Years)</h2>
+        <div id="eps-chart" style="height:380px;"></div>
+    </section>
+
+</div>
+
+{{ data|json_script:"price-data" }}
+{{ pe_data|json_script:"pe-data" }}
+{{ quarterly|json_script:"quarterly-data" }}
+{{ quarterly_eps|json_script:"eps-data" }}
+
+<script>
+const price = JSON.parse(document.getElementById("price-data").textContent);
+const pe = JSON.parse(document.getElementById("pe-data").textContent);
+const q = JSON.parse(document.getElementById("quarterly-data").textContent);
+const eps = JSON.parse(document.getElementById("eps-data").textContent);
+
+// PRICE + MA
+Plotly.newPlot("price-chart", [
+    {
+        x: price.map(d => d.Date),
+        open: price.map(d => d.Open),
+        high: price.map(d => d.High),
+        low: price.map(d => d.Low),
+        close: price.map(d => d.Close),
+        type: "candlestick",
+        name: "Price"
+    },
+    { x: price.map(d => d.Date), y: price.map(d => d.MA30), type: "scatter", name: "MA30" },
+    { x: price.map(d => d.Date), y: price.map(d => d.MA50), type: "scatter", name: "MA50" }
+], { template: "plotly_dark", xaxis: { rangeslider: { visible: false } } });
+
+// RSI
+Plotly.newPlot("rsi-chart", [
+    { x: price.map(d => d.Date), y: price.map(d => d.RSI), type: "scatter" }
+], { template: "plotly_dark", yaxis: { range: [0, 100] } });
+
+// RS NORMALIZED
+const base = price[0].Close;
+Plotly.newPlot("rs-chart", [{
+    x: price.map(d => d.Date),
+    y: price.map(d => (d.RS_Line / price[0].RS_Line) * base),
+    type: "scatter"
+}], { template: "plotly_dark" });
+
+// PE
+if (pe.length) {
+    Plotly.newPlot("pe-chart", [{
+        x: pe.map(d => d.date),
+        y: pe.map(d => d.pe),
+        type: "scatter"
+    }], { template: "plotly_dark" });
+}
+
+// Revenue
+if (q.length) {
+    Plotly.newPlot("revenue-chart", [
+        { x: q.map(d => d.quarter), y: q.map(d => d.revenue), type: "bar", name: "Revenue" },
+        { x: q.map(d => d.quarter), y: q.map(d => d.profit), type: "bar", name: "Profit" }
+    ], { template: "plotly_dark", barmode: "group" });
+}
+
+// EPS
+if (eps.length) {
+    Plotly.newPlot("eps-chart", [{
+        x: eps.map(d => d.quarter),
+        y: eps.map(d => d.eps),
+        type: "bar"
+    }], { template: "plotly_dark" });
+}
+</script>
+
+</body>
+</html>

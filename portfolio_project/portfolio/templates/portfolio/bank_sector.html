@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Banking Sector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen">
+
+<header class="px-8 py-6 border-b border-gray-700">
+    <h1 class="text-3xl font-bold">🏦 Banking Sector Dashboard</h1>
+    <p class="text-gray-400 mt-1">Live prices • Valuation • Market cap</p>
+</header>
+
+<div class="max-w-7xl mx-auto mt-10 px-6">
+    <div class="overflow-x-auto rounded-xl border border-gray-700">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-800 text-gray-300">
+                <tr>
+                    <th class="text-left px-5 py-4">Bank</th>
+                    <th class="text-right px-5 py-4">LTP</th>
+                    <th class="text-right px-5 py-4">High</th>
+                    <th class="text-right px-5 py-4">Low</th>
+                    <th class="text-right px-5 py-4">P/E</th>
+                    <th class="text-right px-5 py-4">Market Cap (₹ Cr)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bank in banks %}
+                <tr class="border-t border-gray-800 hover:bg-gray-800">
+                    <td class="px-5 py-4 font-semibold">
+                        <a href="/banks/{{ bank.symbol }}/" class="text-blue-400 hover:underline">
+                            {{ bank.name }}
+                        </a>
+                    </td>
+                    <td class="px-5 py-4 text-right">{{ bank.ltp|default:"—" }}</td>
+                    <td class="px-5 py-4 text-right">{{ bank.high|default:"—" }}</td>
+                    <td class="px-5 py-4 text-right">{{ bank.low|default:"—" }}</td>
+                    <td class="px-5 py-4 text-right">{{ bank.pe|default:"—" }}</td>
+                    <td class="px-5 py-4 text-right">{{ bank.market_cap|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
