@@ -8,15 +8,48 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen">
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
 
-<header class="py-6 border-b border-gray-700 text-center">
-    <h1 class="text-3xl font-bold">{{ symbol }} – Stock Analysis</h1>
+<!-- HEADER -->
+<header class="py-6 border-b border-indigo-200 text-center bg-white/40 backdrop-blur-md">
+    <h1 class="text-3xl font-bold text-indigo-900 tracking-wide">
+        {{ symbol }} – Stock Analysis
+    </h1>
 </header>
 
-<div class="flex justify-center gap-4 mt-6">
+<!-- FLOATING STAT CARDS -->
+<div class="max-w-7xl mx-auto px-8 mt-10 grid grid-cols-1 md:grid-cols-4 gap-6">
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">Latest Close</p>
+        <p class="text-2xl font-bold mt-1">₹ {{ data.0.Close|default:"—" }}</p>
+    </div>
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">30 Day MA</p>
+        <p class="text-2xl font-bold mt-1">₹ {{ data.0.MA30|default:"—" }}</p>
+    </div>
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">RSI (14)</p>
+        <p class="text-2xl font-bold mt-1">{{ data.0.RSI|default:"—" }}</p>
+    </div>
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">P/E Ratio</p>
+        <p class="text-2xl font-bold mt-1">
+            {% if pe_data %}{{ pe_data.0.pe }}{% else %}—{% endif %}
+        </p>
+    </div>
+
+</div>
+
+<!-- FILTER -->
+<div class="flex justify-center gap-4 mt-10">
     <form method="get">
-        <select name="period" onchange="this.form.submit()" class="p-2 rounded text-black">
+        <select name="period"
+                onchange="this.form.submit()"
+                class="px-4 py-2 rounded-xl bg-white/70 border border-indigo-200 shadow-md focus:ring-2 focus:ring-indigo-400">
             <option value="1mo" {% if period == "1mo" %}selected{% endif %}>1 Month</option>
             <option value="3mo" {% if period == "3mo" %}selected{% endif %}>3 Months</option>
             <option value="6mo" {% if period == "6mo" %}selected{% endif %}>6 Months</option>
@@ -26,40 +59,44 @@
         </select>
     </form>
 
-    <a href="/banks/" class="px-4 py-2 bg-gray-700 rounded">← Back</a>
+    <a href="/banks/"
+       class="px-5 py-2 rounded-xl bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition">
+       ← Back
+    </a>
 </div>
 
-<div class="flex flex-col space-y-24 mt-12 px-8">
+<!-- CHART SECTIONS -->
+<div class="flex flex-col space-y-24 mt-16 px-8 max-w-7xl mx-auto">
 
-    <section>
-        <h2 class="text-xl font-semibold mb-3">Price Action (Candlestick + MA)</h2>
-        <div id="price-chart" style="height:650px;"></div>
-    </section>
+    <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Price Action (Candlestick + MA)</h2>
+    <div id="price-chart" style="height:650px;"></div>
+</section>
 
-    <section>
-        <h2 class="text-xl font-semibold mb-3">RSI (14)</h2>
-        <div id="rsi-chart" style="height:300px;"></div>
-    </section>
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">RSI (14)</h2>
+    <div id="rsi-chart" style="height:300px;"></div>
+</section>
 
-    <section>
-        <h2 class="text-xl font-semibold mb-3">Relative Strength vs NIFTY</h2>
-        <div id="rs-chart" style="height:300px;"></div>
-    </section>
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Relative Strength vs NIFTY</h2>
+    <div id="rs-chart" style="height:300px;"></div>
+</section>
 
-    <section>
-        <h2 class="text-xl font-semibold mb-3">PE Ratio Trend</h2>
-        <div id="pe-chart" style="height:300px;"></div>
-    </section>
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">PE Ratio Trend</h2>
+    <div id="pe-chart" style="height:300px;"></div>
+</section>
 
-    <section>
-        <h2 class="text-xl font-semibold mb-3">Quarterly Revenue & Profit</h2>
-        <div id="revenue-chart" style="height:420px;"></div>
-    </section>
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Quarterly Revenue & Profit</h2>
+    <div id="revenue-chart" style="height:420px;"></div>
+</section>
 
-    <section>
-        <h2 class="text-xl font-semibold mb-3">Quarterly EPS (Last 3 Years)</h2>
-        <div id="eps-chart" style="height:380px;"></div>
-    </section>
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Quarterly EPS (Last 3 Years)</h2>
+    <div id="eps-chart" style="height:380px;"></div>
+</section>
 
 </div>
 
@@ -74,7 +111,9 @@ const pe = JSON.parse(document.getElementById("pe-data").textContent);
 const q = JSON.parse(document.getElementById("quarterly-data").textContent);
 const eps = JSON.parse(document.getElementById("eps-data").textContent);
 
-// PRICE + MA
+const whiteLayout = { template: "plotly_white", xaxis: { rangeslider: { visible: false } } };
+
+// PRICE
 Plotly.newPlot("price-chart", [
     {
         x: price.map(d => d.Date),
@@ -87,28 +126,26 @@ Plotly.newPlot("price-chart", [
     },
     { x: price.map(d => d.Date), y: price.map(d => d.MA30), type: "scatter", name: "MA30" },
     { x: price.map(d => d.Date), y: price.map(d => d.MA50), type: "scatter", name: "MA50" }
-], { template: "plotly_dark", xaxis: { rangeslider: { visible: false } } });
+], whiteLayout);
 
 // RSI
-Plotly.newPlot("rsi-chart", [
-    { x: price.map(d => d.Date), y: price.map(d => d.RSI), type: "scatter" }
-], { template: "plotly_dark", yaxis: { range: [0, 100] } });
+Plotly.newPlot("rsi-chart",
+    [{ x: price.map(d => d.Date), y: price.map(d => d.RSI), type: "scatter" }],
+    { template: "plotly_white", yaxis: { range: [0, 100] } }
+);
 
-// RS NORMALIZED
-const base = price[0].Close;
-Plotly.newPlot("rs-chart", [{
-    x: price.map(d => d.Date),
-    y: price.map(d => (d.RS_Line / price[0].RS_Line) * base),
-    type: "scatter"
-}], { template: "plotly_dark" });
+// RS
+Plotly.newPlot("rs-chart",
+    [{ x: price.map(d => d.Date), y: price.map(d => d.RS_Line), type: "scatter" }],
+    { template: "plotly_white" }
+);
 
 // PE
 if (pe.length) {
-    Plotly.newPlot("pe-chart", [{
-        x: pe.map(d => d.date),
-        y: pe.map(d => d.pe),
-        type: "scatter"
-    }], { template: "plotly_dark" });
+    Plotly.newPlot("pe-chart",
+        [{ x: pe.map(d => d.date), y: pe.map(d => d.pe), type: "scatter" }],
+        { template: "plotly_white" }
+    );
 }
 
 // Revenue
@@ -116,16 +153,15 @@ if (q.length) {
     Plotly.newPlot("revenue-chart", [
         { x: q.map(d => d.quarter), y: q.map(d => d.revenue), type: "bar", name: "Revenue" },
         { x: q.map(d => d.quarter), y: q.map(d => d.profit), type: "bar", name: "Profit" }
-    ], { template: "plotly_dark", barmode: "group" });
+    ], { template: "plotly_white", barmode: "group" });
 }
 
 // EPS
 if (eps.length) {
-    Plotly.newPlot("eps-chart", [{
-        x: eps.map(d => d.quarter),
-        y: eps.map(d => d.eps),
-        type: "bar"
-    }], { template: "plotly_dark" });
+    Plotly.newPlot("eps-chart",
+        [{ x: eps.map(d => d.quarter), y: eps.map(d => d.eps), type: "bar" }],
+        { template: "plotly_white" }
+    );
 }
 </script>
 
