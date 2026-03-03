@@ -22,24 +22,22 @@
 
     <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
         <p class="text-sm text-indigo-600">Latest Close</p>
-        <p class="text-2xl font-bold mt-1">₹ {{ data.0.Close|default:"—" }}</p>
+        <p class="text-2xl font-bold mt-1">Rs {% if data.0.Close %}{{ data.0.Close|floatformat:2 }}{% else %}—{% endif %}</p>
     </div>
 
     <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
         <p class="text-sm text-indigo-600">30 Day MA</p>
-        <p class="text-2xl font-bold mt-1">₹ {{ data.0.MA30|default:"—" }}</p>
+        <p class="text-2xl font-bold mt-1">Rs {% if data.0.MA30 %}{{ data.0.MA30|floatformat:2 }}{% else %}—{% endif %}</p>
     </div>
 
     <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
         <p class="text-sm text-indigo-600">RSI (14)</p>
-        <p class="text-2xl font-bold mt-1">{{ data.0.RSI|default:"—" }}</p>
+        <p class="text-2xl font-bold mt-1">{% if data.0.RSI %}{{ data.0.RSI|floatformat:2 }}{% else %}—{% endif %}</p>
     </div>
 
     <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
         <p class="text-sm text-indigo-600">P/E Ratio</p>
-        <p class="text-2xl font-bold mt-1">
-            {% if pe_data %}{{ pe_data.0.pe }}{% else %}—{% endif %}
-        </p>
+        <p class="text-2xl font-bold mt-1">{% if pe_data %}{{ pe_data.0.pe|floatformat:2 }}{% else %}—{% endif %}</p>
     </div>
 
 </div>
@@ -70,32 +68,32 @@
 
     <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
     <h2 class="text-xl font-semibold mb-3 text-indigo-900">Price Action (Candlestick + MA)</h2>
-    <div id="price-chart" style="height:650px;"></div>
+        <div id="price-chart" class="w-full" style="height:700px;"></div>
 </section>
 
 <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
     <h2 class="text-xl font-semibold mb-3 text-indigo-900">RSI (14)</h2>
-    <div id="rsi-chart" style="height:300px;"></div>
+        <div id="rsi-chart" class="w-full" style="height:400px;"></div>
 </section>
 
 <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
     <h2 class="text-xl font-semibold mb-3 text-indigo-900">Relative Strength vs NIFTY</h2>
-    <div id="rs-chart" style="height:300px;"></div>
+        <div id="rs-chart" class="w-full" style="height:400px;"></div>
 </section>
 
 <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
     <h2 class="text-xl font-semibold mb-3 text-indigo-900">PE Ratio Trend</h2>
-    <div id="pe-chart" style="height:300px;"></div>
+        <div id="pe-chart" class="w-full" style="height:400px;"></div>
 </section>
 
 <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
     <h2 class="text-xl font-semibold mb-3 text-indigo-900">Quarterly Revenue & Profit</h2>
-    <div id="revenue-chart" style="height:420px;"></div>
+        <div id="revenue-chart" class="w-full" style="height:620px;"></div>
 </section>
 
 <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
     <h2 class="text-xl font-semibold mb-3 text-indigo-900">Quarterly EPS (Last 3 Years)</h2>
-    <div id="eps-chart" style="height:380px;"></div>
+        <div id="eps-chart" class="w-full" style="height:580px;"></div>
 </section>
 
 </div>
@@ -115,7 +113,7 @@ const whiteLayout = { template: "plotly_white", xaxis: { rangeslider: { visible:
 
 // PRICE
 Plotly.newPlot("price-chart", [
-    {
+    { 
         x: price.map(d => d.Date),
         open: price.map(d => d.Open),
         high: price.map(d => d.High),
@@ -126,42 +124,46 @@ Plotly.newPlot("price-chart", [
     },
     { x: price.map(d => d.Date), y: price.map(d => d.MA30), type: "scatter", name: "MA30" },
     { x: price.map(d => d.Date), y: price.map(d => d.MA50), type: "scatter", name: "MA50" }
-], whiteLayout);
+], whiteLayout, {responsive: true});
 
 // RSI
 Plotly.newPlot("rsi-chart",
     [{ x: price.map(d => d.Date), y: price.map(d => d.RSI), type: "scatter" }],
-    { template: "plotly_white", yaxis: { range: [0, 100] } }
+    { template: "plotly_white", yaxis: { range: [0, 100] } },
+    { responsive: true }
 );
 
 // RS
 Plotly.newPlot("rs-chart",
     [{ x: price.map(d => d.Date), y: price.map(d => d.RS_Line), type: "scatter" }],
-    { template: "plotly_white" }
+    { template: "plotly_white" },
+    { responsive: true }
 );
 
 // PE
 if (pe.length) {
     Plotly.newPlot("pe-chart",
-        [{ x: pe.map(d => d.date), y: pe.map(d => d.pe), type: "scatter" }],
-        { template: "plotly_white" }
-    );
+            [{ x: pe.map(d => d.date), y: pe.map(d => d.pe), type: "scatter" }],
+            { template: "plotly_white" },
+            { responsive: true }
+        );
 }
 
 // Revenue
 if (q.length) {
     Plotly.newPlot("revenue-chart", [
-        { x: q.map(d => d.quarter), y: q.map(d => d.revenue), type: "bar", name: "Revenue" },
-        { x: q.map(d => d.quarter), y: q.map(d => d.profit), type: "bar", name: "Profit" }
-    ], { template: "plotly_white", barmode: "group" });
+            { x: q.map(d => d.quarter), y: q.map(d => d.revenue), type: "bar", name: "Revenue" },
+            { x: q.map(d => d.quarter), y: q.map(d => d.profit), type: "bar", name: "Profit" }
+        ], { template: "plotly_white", barmode: "group" }, { responsive: true });
 }
 
 // EPS
 if (eps.length) {
     Plotly.newPlot("eps-chart",
-        [{ x: eps.map(d => d.quarter), y: eps.map(d => d.eps), type: "bar" }],
-        { template: "plotly_white" }
-    );
+            [{ x: eps.map(d => d.quarter), y: eps.map(d => d.eps), type: "bar" }],
+            { template: "plotly_white" },
+            { responsive: true }
+        );
 }
 </script>
 
