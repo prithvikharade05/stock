@@ -23,6 +23,9 @@
                     <th class="text-right px-5 py-4">LTP</th>
                     <th class="text-right px-5 py-4">High</th>
                     <th class="text-right px-5 py-4">Low</th>
+                    <th class="text-right px-5 py-4">1Y Low</th>
+                    <th class="text-right px-5 py-4">1Y High</th>
+                    <th class="text-right px-5 py-4">Discount (%)</th>
                     <th class="text-right px-5 py-4">P/E</th>
                     <th class="text-right px-5 py-4">Market Cap (₹ Cr)</th>
                 </tr>
@@ -37,11 +40,14 @@
                             {{ bank.name }}
                         </a>
                     </td>
-                    <td class="px-5 py-4 text-right">{{ bank.ltp|default:"—" }}</td>
-                    <td class="px-5 py-4 text-right">{{ bank.high|default:"—" }}</td>
-                    <td class="px-5 py-4 text-right">{{ bank.low|default:"—" }}</td>
-                    <td class="px-5 py-4 text-right">{{ bank.pe|default:"—" }}</td>
-                    <td class="px-5 py-4 text-right">{{ bank.market_cap|default:"—" }}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.ltp %}{{ bank.ltp|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.high %}{{ bank.high|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.low %}{{ bank.low|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.year_low %}{{ bank.year_low|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.year_high %}{{ bank.year_high|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.discount_pct is not none %}{{ bank.discount_pct|floatformat:2 }}%{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.pe %}{{ bank.pe|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-5 py-4 text-right">{% if bank.market_cap %}{{ bank.market_cap|floatformat:2 }}{% else %}—{% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

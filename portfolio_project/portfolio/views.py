@@ -33,18 +33,54 @@ def bank_sector(request):
 
     for name, symbol in BANK_STOCKS.items():
         try:
-            info = yf.Ticker(symbol).info
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+
+            # 1-year historical close min/max
+            year_low = None
+            year_high = None
+            try:
+                hist = ticker.history(period="1y")
+                if not hist.empty and "Close" in hist.columns:
+                    year_low = float(hist["Close"].min())
+                    year_high = float(hist["Close"].max())
+            except Exception:
+                year_low = None
+                year_high = None
+
+            current = info.get("currentPrice")
+            discount = None
+            try:
+                if year_high and current is not None:
+                    discount = round(((year_high - float(current)) / year_high) * 100, 2)
+            except Exception:
+                discount = None
+
             banks.append({
                 "name": name,
                 "symbol": symbol.replace(".NS", ""),
-                "ltp": info.get("currentPrice"),
+                "ltp": current,
                 "high": info.get("dayHigh"),
                 "low": info.get("dayLow"),
                 "market_cap": round(info["marketCap"] / 1e7, 2) if info.get("marketCap") else None,
                 "pe": info.get("trailingPE"),
+                "year_low": year_low,
+                "year_high": year_high,
+                "discount_pct": discount,
             })
         except Exception:
-            banks.append({"name": name, "symbol": symbol.replace(".NS", "")})
+            banks.append({
+                "name": name,
+                "symbol": symbol.replace(".NS", ""),
+                "ltp": None,
+                "high": None,
+                "low": None,
+                "market_cap": None,
+                "pe": None,
+                "year_low": None,
+                "year_high": None,
+                "discount_pct": None,
+            })
 
     return render(request, "portfolio/bank_sector.html", {"banks": banks})
 
