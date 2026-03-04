@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib import messages
+from .models import Portfolio, PortfolioStock
 import yfinance as yf
 import pandas as pd
 import math
@@ -194,3 +197,93 @@ def bank_detail(request, symbol):
         "pe_data": pe_data,
         "quarterly_eps": quarterly_eps,
     })
+
+# --------------------------------
+# STOCK PORTFOLIO VIEWS
+# --------------------------------
+def portfolio_list(request):
+    portfolios = Portfolio.objects.all().order_by('-created_at')
+    return render(request, "portfolio/portfolio_list.html", {"portfolios": portfolios})
+
+def create_portfolio(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        if name:
+            portfolio = Portfolio.objects.create(name=name)
+            messages.success(request, f"Portfolio '{name}' created successfully!")
+            return redirect("portfolio_detail", portfolio_id=portfolio.id)
+    return redirect("portfolio_list")
+
+def portfolio_detail(request, portfolio_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id)
+    stocks = portfolio.stocks.all()
+    
+    # Get current prices for all stocks
+    stock_data = []
+    for stock in stocks:
+        try:
+            ticker = yf.Ticker(stock.stock_symbol + ".NS")
+            current_price = ticker.info.get('currentPrice', 0)
+        except:
+            current_price = 0
+        
+        stock_data.append({
+            'id': stock.id,
+            'stock_symbol': stock.stock_symbol,
+            'stock_name': stock.stock_name,
+            'quantity': stock.quantity,
+            'purchase_price': stock.purchase_price,
+            'current_price': current_price,
+            'current_value': stock.quantity * current_price if current_price else 0,
+            'added_at': stock.added_at,
+        })
+    
+    total_value = sum(s['current_value'] for s in stock_data)
+    
+    return render(request, "portfolio/portfolio_detail.html", {
+        "portfolio": portfolio,
+        "stocks": stock_data,
+        "total_value": total_value,
+    })
+
+def add_stock(request, portfolio_id):
+    if request.method == "POST":
+        portfolio = get_object_or_404(Portfolio, id=portfolio_id)
+        symbol = request.POST.get("stock_symbol")
+        name = request.POST.get("stock_name")
+        quantity = int(request.POST.get("quantity", 0))
+        purchase_price = request.POST.get("purchase_price")
+        
+        if symbol and quantity > 0:
+            # Check if stock already exists in portfolio
+            existing_stock = portfolio.stocks.filter(stock_symbol=symbol).first()
+            if existing_stock:
+                existing_stock.quantity += quantity
+                if purchase_price:
+                    existing_stock.purchase_price = purchase_price
+                existing_stock.save()
+                messages.success(request, f"Updated {name} quantity in portfolio!")
+            else:
+                PortfolioStock.objects.create(
+                    portfolio=portfolio,
+                    stock_symbol=symbol,
+                    stock_name=name,
+                    quantity=quantity,
+                    purchase_price=purchase_price if purchase_price else None
+                )
+                messages.success(request, f"Added {name} to portfolio!")
+        
+        return redirect("portfolio_detail", portfolio_id=portfolio.id)
+    
+    return redirect("portfolio_list")
+
+def delete_stock(request, stock_id):
+    stock = get_object_or_404(PortfolioStock, id=stock_id)
+    portfolio_id = stock.portfolio.id
+    stock.delete()
+    messages.success(request, "Stock removed from portfolio!")
+    return redirect("portfolio_detail", portfolio_id=portfolio_id)
+
+def get_portfolios(request):
+    portfolios = Portfolio.objects.all().values('id', 'name')
+    return JsonResponse({"portfolios": list(portfolios)})

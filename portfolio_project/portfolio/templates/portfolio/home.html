@@ -3,50 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <title>Portfolio</title>
-
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen">
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
 
     <!-- Header -->
-    <header class="py-6 border-b border-gray-700">
-        <h1 class="text-4xl font-bold text-center">
+    <header class="px-8 py-6 border-b border-indigo-200/50 bg-white/30 backdrop-blur-xl shadow-sm">
+        <h1 class="text-4xl font-bold text-center bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">
             📊 Portfolio
         </h1>
-        <p class="text-center text-gray-400 mt-2">
+        <p class="text-center text-indigo-600/80 mt-2 font-medium">
             Market Sectors Overview
         </p>
     </header>
 
     <!-- Main Content -->
-    <main class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <main class="p-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
 
         <!-- Bank Sector Card -->
         <a href="/banks/"
-           class="bg-gray-800 p-6 rounded-lg hover:bg-blue-600 transition">
-            <h2 class="text-2xl font-semibold">🏦 Bank Sector</h2>
-            <p class="text-gray-400 mt-2">
+           class="bg-white/40 backdrop-blur-xl p-8 rounded-3xl hover:bg-white/60 transition-all duration-300 border border-white/50 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/20 group">
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">🏦 Bank Sector</h2>
+            <p class="text-indigo-800/70 mt-3 font-medium">
                 View major banking stocks and analysis
             </p>
         </a>
 
+        <!-- Stock Portfolio Card -->
+        <a href="/portfolio/"
+           class="bg-white/40 backdrop-blur-xl p-8 rounded-3xl hover:bg-white/60 transition-all duration-300 border border-white/50 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/20 group">
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">📈 Stock Portfolio</h2>
+            <p class="text-indigo-800/70 mt-3 font-medium">
+                Create and manage your own portfolio
+            </p>
+        </a>
+
         <!-- Placeholder Sectors -->
-        <div class="bg-gray-800 p-6 rounded-lg opacity-50">
-            <h2 class="text-2xl font-semibold">💻 IT Sector</h2>
-            <p class="text-gray-400 mt-2">Coming soon</p>
+        <div class="bg-white/20 backdrop-blur-xl p-8 rounded-3xl border border-white/30 opacity-50">
+            <h2 class="text-2xl font-bold text-indigo-800/50">💻 IT Sector</h2>
+            <p class="text-indigo-800/40 mt-3">Coming soon</p>
         </div>
 
-        <div class="bg-gray-800 p-6 rounded-lg opacity-50">
-            <h2 class="text-2xl font-semibold">🧪 Pharma Sector</h2>
-            <p class="text-gray-400 mt-2">Coming soon</p>
+        <div class="bg-white/20 backdrop-blur-xl p-8 rounded-3xl border border-white/30 opacity-50">
+            <h2 class="text-2xl font-bold text-indigo-800/50">🧪 Pharma Sector</h2>
+            <p class="text-indigo-800/40 mt-3">Coming soon</p>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="py-6 border-t border-gray-700 text-center text-gray-400">
+    <footer class="py-6 border-t border-indigo-200/30 text-center text-indigo-700/60">
         © 2026 Prithviraj | Stock Portfolio Dashboard
     </footer>
 
