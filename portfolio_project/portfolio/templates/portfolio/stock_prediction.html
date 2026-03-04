@@ -93,10 +93,10 @@
 
             </div>
 
-            <!-- Chart Section -->
-            <div class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+            <!-- Chart Section - 70% of screen -->
+            <div class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100 w-full">
                 <h2 class="text-xl font-semibold mb-3 text-indigo-900">Price Prediction Chart</h2>
-                <div id="predictionChart" class="w-full" style="height:500px;"></div>
+                <div id="predictionChart" class="w-full" style="height:70vh;min-height:500px;"></div>
             </div>
 
         </div>
@@ -224,10 +224,6 @@
             const predDates = predictedPoints.map(p => p.date);
             const predPrices = predictedPoints.map(p => p.price);
             
-            // Combine all dates for x-axis
-            const allDates = [...dates, ...predDates];
-            const allPrices = [...prices, ...(modelType === 'linear' ? predPrices : [null, null])];
-            
             const traces = [];
             
             // Historical prices line
@@ -274,20 +270,33 @@
             
             const layout = {
                 template: 'plotly_white',
-                xaxis: { 
-                    rangeslider: { visible: false },
-                    title: 'Date'
+                autosize: true,
+                margin: { l: 50, r: 20, t: 20, b: 50 },
+                xaxis: {
+                    title: 'Date',
+                    automargin: true
                 },
-                yaxis: { 
-                    title: 'Price (₹)'
+                yaxis: {
+                    title: 'Price (₹)',
+                    automargin: true
                 },
                 legend: {
-                    x: 0,
-                    y: 1
+                    orientation: 'h',
+                    y: 1.1
                 }
             };
             
-            Plotly.newPlot('predictionChart', traces, layout, { responsive: true });
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('predictionChart', traces, layout, config);
+            
+            // Force resize after rendering
+            setTimeout(function() {
+                Plotly.Plots.resize('predictionChart');
+            }, 100);
         }
 
         // Allow Enter key to submit
@@ -295,6 +304,11 @@
             if (e.key === 'Enter') {
                 predictStock();
             }
+        });
+
+        // Handle window resize for chart
+        window.addEventListener('resize', function() {
+            Plotly.Plots.resize('predictionChart');
         });
     </script>
 
