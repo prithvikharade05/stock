@@ -465,3 +465,60 @@ def portfolio_cluster(request, portfolio_id):
             'message': f'Error: {str(e)}',
             'data': []
         })
+
+# --------------------------------
+# STOCK PRICE PREDICTION
+# --------------------------------
+from django.views.decorators.csrf import csrf_exempt
+from .regression_engine import predict_stock
+
+def stock_prediction(request):
+    """Render the stock prediction page."""
+    return render(request, "portfolio/stock_prediction.html")
+
+@csrf_exempt
+@require_POST
+def predict_stock_api(request):
+    """
+    API endpoint for stock price prediction.
+    
+    Expected POST data:
+    - symbol: Stock ticker symbol
+    - model_type: "linear" or "logistic"
+    """
+    import json
+    
+    try:
+        # Parse request body
+        data = json.loads(request.body)
+        
+        # Get parameters
+        symbol = data.get('symbol', '').strip().upper()
+        model_type = data.get('model_type', 'linear')
+        
+        # Validate symbol
+        if not symbol:
+            return JsonResponse({
+                'success': False,
+                'error': 'Please provide a stock symbol.'
+            })
+        
+        # Validate model_type
+        if model_type not in ['linear', 'logistic']:
+            model_type = 'linear'
+        
+        # Run prediction
+        result = predict_stock(symbol, model_type)
+        
+        return JsonResponse(result)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON request'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error: {str(e)}'
+        })

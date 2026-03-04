@@ -43,6 +43,24 @@
             </form>
         </div>
 
+        <!-- ML Features Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Stock Price Prediction Card -->
+            <a href="{% url 'stock_prediction' %}" 
+               class="bg-white/40 backdrop-blur-xl rounded-3xl p-6 hover:bg-white/60 transition-all duration-300 border border-white/50 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/20 group">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">Stock Price Prediction</h3>
+                    <span class="text-3xl">🔮</span>
+                </div>
+                <div class="space-y-2 text-indigo-800/80">
+                    <p>Predict stock prices using <span class="text-indigo-900 font-bold">Regression taking Last 3 Years of Data</span> models</p>
+                    <p class="text-sm text-indigo-600/70">Linear & Logistic Regression</p>
+                </div>
+            </a>
+
+        </div>
+
         <!-- Portfolios Grid -->
         {% if portfolios %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

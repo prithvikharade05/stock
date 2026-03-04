@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Price Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+    <!-- Header -->
+    <header class="px-8 py-5 border-b border-indigo-200/50 bg-white/30 backdrop-blur-xl shadow-sm">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">🔮 Stock Price Prediction</h1>
+                <p class="text-indigo-600/80 mt-1 font-medium">Using Regression Models</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/portfolio/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    📊 Portfolio
+                </a>
+                <a href="/banks/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏦 Bank Stocks
+                </a>
+                <a href="/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Input Section -->
+        <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-xl shadow-indigo-500/20 border border-white/50">
+            <h2 class="text-xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent mb-4">Enter Stock Details</h2>
+            
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Stock Symbol Input -->
+                <input type="text" id="stockSymbol" placeholder="Enter stock symbol (e.g., RELIANCE, HDFCBANK, TCS)" 
+                       class="flex-1 px-5 py-3 bg-white/60 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-900 placeholder-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all"
+                       required>
+                
+                <!-- Model Selection -->
+                <select id="modelType" 
+                        class="px-5 py-3 bg-white/60 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all">
+                    <option value="linear">Linear Regression (Price)</option>
+                    <option value="logistic">Logistic Regression (Direction)</option>
+                </select>
+                
+                <!-- Predict Button -->
+                <button id="predictBtn" onclick="predictStock()" 
+                        class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    🔮 Predict
+                </button>
+            </div>
+            
+            <!-- Error Message -->
+            <div id="errorMsg" class="mt-4 p-4 bg-red-100 border border-red-300 rounded-xl text-red-700 hidden"></div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+            <p class="mt-4 text-indigo-700 font-medium">Fetching data and training model...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            
+            <!-- Predictions Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                
+                <!-- Current Price Card -->
+                <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-indigo-100">
+                    <p class="text-sm text-indigo-600">Current Price</p>
+                    <p class="text-2xl font-bold mt-1" id="currentPrice">—</p>
+                </div>
+
+                <!-- Day 1 Prediction -->
+                <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-indigo-100">
+                    <p class="text-sm text-indigo-600" id="day1Label">Day 1 Prediction</p>
+                    <p class="text-2xl font-bold mt-1" id="day1Prediction">—</p>
+                </div>
+
+                <!-- Day 2 Prediction -->
+                <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-indigo-100">
+                    <p class="text-sm text-indigo-600" id="day2Label">Day 2 Prediction</p>
+                    <p class="text-2xl font-bold mt-1" id="day2Prediction">—</p>
+                </div>
+
+            </div>
+
+            <!-- Chart Section -->
+            <div class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+                <h2 class="text-xl font-semibold mb-3 text-indigo-900">Price Prediction Chart</h2>
+                <div id="predictionChart" class="w-full" style="height:500px;"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 border-t border-indigo-200/30 text-center text-indigo-700/60">
+        © 2026 Prithviraj | Stock Portfolio Dashboard
+    </footer>
+
+    <script>
+        // Get CSRF token for Django
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function predictStock() {
+            const symbol = document.getElementById('stockSymbol').value.trim();
+            const modelType = document.getElementById('modelType').value;
+            const predictBtn = document.getElementById('predictBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // Reset UI
+            errorMsg.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            
+            // Validate input
+            if (!symbol) {
+                errorMsg.textContent = 'Please enter a stock symbol.';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading
+            predictBtn.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/predict-stock/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        model_type: modelType
+                    }),
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    errorMsg.textContent = data.error || 'An error occurred.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                
+                // Display results
+                displayResults(data, modelType);
+                
+            } catch (error) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                // Hide loading
+                predictBtn.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        function displayResults(data, modelType) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // Update labels based on model type
+            if (modelType === 'linear') {
+                document.getElementById('day1Label').textContent = 'Day 1 Price (₹)';
+                document.getElementById('day2Label').textContent = 'Day 2 Price (₹)';
+            } else {
+                document.getElementById('day1Label').textContent = 'Day 1 Up Probability';
+                document.getElementById('day2Label').textContent = 'Day 2 Up Probability';
+            }
+            
+            // Display current price
+            document.getElementById('currentPrice').textContent = data.current_price ? '₹ ' + data.current_price : '—';
+            
+            // Display predictions
+            if (modelType === 'linear') {
+                document.getElementById('day1Prediction').textContent = data.prediction_day_1 ? '₹ ' + data.prediction_day_1 : '—';
+                document.getElementById('day2Prediction').textContent = data.prediction_day_2 ? '₹ ' + data.prediction_day_2 : '—';
+            } else {
+                document.getElementById('day1Prediction').textContent = data.probability_day_1 ? data.probability_day_1 + '%' : '—';
+                document.getElementById('day2Prediction').textContent = data.probability_day_2 ? data.probability_day_2 + '%' : '—';
+            }
+            
+            // Render chart
+            renderChart(data.historical_prices, data.predicted_points, modelType);
+            
+            // Show results
+            resultsSection.classList.remove('hidden');
+        }
+
+        function renderChart(historicalPrices, predictedPoints, modelType) {
+            const dates = historicalPrices.map(p => p.date);
+            const prices = historicalPrices.map(p => p.price);
+            
+            // Add predicted points
+            const predDates = predictedPoints.map(p => p.date);
+            const predPrices = predictedPoints.map(p => p.price);
+            
+            // Combine all dates for x-axis
+            const allDates = [...dates, ...predDates];
+            const allPrices = [...prices, ...(modelType === 'linear' ? predPrices : [null, null])];
+            
+            const traces = [];
+            
+            // Historical prices line
+            traces.push({
+                x: dates,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical',
+                line: {
+                    color: '#4f46e5',
+                    width: 2
+                }
+            });
+            
+            if (modelType === 'linear') {
+                // For linear regression, show predicted prices
+                traces.push({
+                    x: [dates[dates.length - 1], predDates[0]],
+                    y: [prices[prices.length - 1], predPrices[0]],
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Prediction',
+                    line: {
+                        color: '#f59e0b',
+                        width: 2,
+                        dash: 'dash'
+                    }
+                });
+                
+                traces.push({
+                    x: predDates,
+                    y: predPrices,
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: 'Predicted',
+                    marker: {
+                        color: '#f59e0b',
+                        size: 12,
+                        symbol: 'diamond'
+                    }
+                });
+            }
+            
+            const layout = {
+                template: 'plotly_white',
+                xaxis: { 
+                    rangeslider: { visible: false },
+                    title: 'Date'
+                },
+                yaxis: { 
+                    title: 'Price (₹)'
+                },
+                legend: {
+                    x: 0,
+                    y: 1
+                }
+            };
+            
+            Plotly.newPlot('predictionChart', traces, layout, { responsive: true });
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('stockSymbol').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                predictStock();
+            }
+        });
+    </script>
+
+</body>
+</html>
+

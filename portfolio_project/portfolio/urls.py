@@ -13,4 +13,7 @@ urlpatterns = [
     path("portfolio/stock/<int:stock_id>/delete/", views.delete_stock, name="delete_stock"),
     path("portfolio/<int:portfolio_id>/cluster/", views.portfolio_cluster, name="portfolio_cluster"),
     path("api/portfolios/", views.get_portfolios, name="get_portfolios"),
+    # Stock Prediction URLs
+    path("stock-prediction/", views.stock_prediction, name="stock_prediction"),
+    path("api/predict-stock/", views.predict_stock_api, name="predict_stock_api"),
 ]
