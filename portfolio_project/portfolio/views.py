@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 from .models import Portfolio, PortfolioStock
+from .ml_engine import cluster_portfolio
 import yfinance as yf
 import pandas as pd
 import math
@@ -101,6 +103,115 @@ def calculate_rsi(series, period=14):
     rs = avg_gain / avg_loss
     return 100 - (100 / (1 + rs))
 
+
+# --------------------------------
+# RETURNS CALCULATION
+# --------------------------------
+def calculate_returns(symbol):
+    """
+    Calculate returns for various time periods.
+    
+    Args:
+        symbol: Stock symbol (e.g., 'HDFCBANK')
+    
+    Returns:
+        Dictionary with return percentages for 1W, 1M, 3M, 6M, YTD, 1Y, 3Y, 5Y
+    """
+    import datetime as dt
+    
+    returns = {
+        "1W": None,
+        "1M": None,
+        "3M": None,
+        "6M": None,
+        "YTD": None,
+        "1Y": None,
+        "3Y": None,
+        "5Y": None,
+    }
+    
+    try:
+        # Fetch maximum historical data for accurate calculations
+        ticker = yf.Ticker(symbol + ".NS")
+        hist = ticker.history(period="5y")
+        
+        if hist is None or hist.empty or "Close" not in hist.columns:
+            return returns
+        
+        close_prices = hist["Close"].dropna()
+        
+        if len(close_prices) < 2:
+            return returns
+        
+        latest_price = close_prices.iloc[-1]
+        today = close_prices.index[-1]
+        
+        # Helper function to calculate percentage return
+        def calc_return(start_price, end_price):
+            if start_price is None or end_price is None:
+                return None
+            if start_price <= 0 or not math.isfinite(start_price):
+                return None
+            if end_price <= 0 or not math.isfinite(end_price):
+                return None
+            return round(((end_price - start_price) / start_price) * 100, 2)
+        
+        # Helper to get price X days ago
+        def get_price_days_ago(days):
+            target_date = today - dt.timedelta(days=days)
+            # Find the closest date on or before target_date
+            past_prices = close_prices[close_prices.index <= target_date]
+            if len(past_prices) > 0:
+                return past_prices.iloc[-1]
+            return None
+        
+        # Helper to get price at start of year
+        def get_price_ytd():
+            year_start = dt.datetime(today.year, 1, 1)
+            ytd_prices = close_prices[close_prices.index >= year_start]
+            if len(ytd_prices) > 0:
+                return ytd_prices.iloc[0]
+            return None
+        
+        # 1 Week return (7 days)
+        price_1w = get_price_days_ago(7)
+        returns["1W"] = calc_return(price_1w, latest_price)
+        
+        # 1 Month return (~30 days)
+        price_1m = get_price_days_ago(30)
+        returns["1M"] = calc_return(price_1m, latest_price)
+        
+        # 3 Month return (~90 days)
+        price_3m = get_price_days_ago(90)
+        returns["3M"] = calc_return(price_3m, latest_price)
+        
+        # 6 Month return (~180 days)
+        price_6m = get_price_days_ago(180)
+        returns["6M"] = calc_return(price_6m, latest_price)
+        
+        # Year-to-Date return
+        price_ytd = get_price_ytd()
+        returns["YTD"] = calc_return(price_ytd, latest_price)
+        
+        # 1 Year return (~365 days)
+        price_1y = get_price_days_ago(365)
+        returns["1Y"] = calc_return(price_1y, latest_price)
+        
+        # 3 Year return (~1095 days)
+        price_3y = get_price_days_ago(1095)
+        returns["3Y"] = calc_return(price_3y, latest_price)
+        
+        # 5 Year return (use first available price if 5 years not available)
+        if len(close_prices) >= 2:
+            first_price = close_prices.iloc[0]
+            returns["5Y"] = calc_return(first_price, latest_price)
+        
+    except Exception as e:
+        # Return default None values on any error
+        pass
+    
+    return returns
+
 # --------------------------------
 # STOCK DETAIL PAGE
 # --------------------------------
@@ -189,6 +300,9 @@ def bank_detail(request, symbol):
                 "eps": round(float(eps_val), 2)
             })
 
+    # -------- RETURNS CALCULATION --------
+    stock_returns = calculate_returns(symbol.upper())
+
     return render(request, "portfolio/bank_detail.html", {
         "symbol": symbol.upper(),
         "period": period,
@@ -196,6 +310,7 @@ def bank_detail(request, symbol):
         "quarterly": quarterly,
         "pe_data": pe_data,
         "quarterly_eps": quarterly_eps,
+        "returns": stock_returns,
     })
 
 # --------------------------------
@@ -287,3 +402,66 @@ def delete_stock(request, stock_id):
 def get_portfolios(request):
     portfolios = Portfolio.objects.all().values('id', 'name')
     return JsonResponse({"portfolios": list(portfolios)})
+
+# --------------------------------
+# PORTFOLIO CLUSTERING
+# --------------------------------
+@require_POST
+def portfolio_cluster(request, portfolio_id):
+    """
+    API endpoint for clustering portfolio stocks.
+    
+    Expected POST data:
+    - features: List of feature names to use
+    - k: Number of clusters (2-6)
+    """
+    import json
+    
+    try:
+        # Parse request body
+        data = json.loads(request.body)
+        
+        # Get selected features
+        selected_features = data.get('features', [
+            'pe_ratio',
+            'discount_1y_high',
+            'return_1m',
+            'return_3m',
+            'return_6m',
+            'ltp_to_1y_high_ratio'
+        ])
+        
+        # Get K value
+        k_value = int(data.get('k', 3))
+        k_value = max(2, min(6, k_value))  # Clamp to 2-6
+        
+        # Get portfolio
+        portfolio = get_object_or_404(Portfolio, id=portfolio_id)
+        
+        # Get stock symbols from portfolio
+        stock_symbols = list(portfolio.stocks.values_list('stock_symbol', flat=True))
+        
+        if len(stock_symbols) < 2:
+            return JsonResponse({
+                'success': False,
+                'message': 'Need at least 2 stocks in portfolio for clustering',
+                'data': []
+            })
+        
+        # Run clustering
+        result = cluster_portfolio(stock_symbols, selected_features, k_value)
+        
+        return JsonResponse(result)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON request',
+            'data': []
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}',
+            'data': []
+        })
