@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Time Series Forecast using ARIMA Model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+    <!-- Header -->
+    <header class="px-8 py-5 border-b border-indigo-200/50 bg-white/30 backdrop-blur-xl shadow-sm">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">📈 Time Series Forecast using ARIMA</h1>
+                <p class="text-indigo-600/80 mt-1 font-medium">Predict BTC & Indian Stocks with ARIMA Model</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/portfolio/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    📊 Portfolio
+                </a>
+                <a href="/banks/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏦 Bank Stocks
+                </a>
+                <a href="/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- BTC/USD Forecast Section -->
+        <div class="mb-12">
+            <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 shadow-xl shadow-indigo-500/20 border border-white/50">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">₿ BTC/USD Price Forecast</h2>
+                    <button id="btcForecastBtn" onclick="runBTCForecast()" 
+                            class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300 disabled:opacity-50">
+                        🚀 Run Forecast
+                    </button>
+                </div>
+                
+                <!-- BTC Error Message -->
+                <div id="btcErrorMsg" class="mt-4 p-4 bg-red-100 border border-red-300 rounded-xl text-red-700 hidden"></div>
+                
+                <!-- BTC Loading Spinner -->
+                <div id="btcLoadingSpinner" class="hidden text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+                    <p class="mt-4 text-indigo-700 font-medium">Fetching BTC data and training ARIMA model...</p>
+                </div>
+                
+                <!-- BTC Results -->
+                <div id="btcResults" class="hidden">
+                    <!-- BTC Market Summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Current Price</p>
+                            <p class="text-xl font-bold text-indigo-900" id="btcCurrentPrice">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Last Day High</p>
+                            <p class="text-xl font-bold text-indigo-900" id="btcHighPrice">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Last Day Low</p>
+                            <p class="text-xl font-bold text-indigo-900" id="btcLowPrice">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Model Order (p,d,q)</p>
+                            <p class="text-xl font-bold text-indigo-900" id="btcModelOrder">—</p>
+                        </div>
+                    </div>
+                    
+                    <!-- BTC Chart -->
+                    <div class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100 w-full mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-indigo-900">BTC Price Forecast Chart</h3>
+                        <div id="btcChart" class="w-full" style="height:50vh;min-height:400px;"></div>
+                    </div>
+                    
+                    <!-- BTC Forecast Table -->
+                    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-indigo-100">
+                        <h3 class="text-lg font-semibold mb-4 text-indigo-900">BTC 7-Day Price Forecast</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="border-b border-indigo-200">
+                                        <th class="pb-3 text-indigo-700 font-semibold">Date</th>
+                                        <th class="pb-3 text-indigo-700 font-semibold">Predicted Price (USD)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="btcForecastTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indian Stock Forecast Section -->
+        <div class="mb-12">
+            <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 shadow-xl shadow-indigo-500/20 border border-white/50">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent mb-6">📊 Predict Any Indian Stock Using ARIMA</h2>
+                
+                <!-- Input Section -->
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol (e.g., RELIANCE, TCS, HDFCBANK)" 
+                           class="flex-1 px-5 py-3 bg-white/60 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-900 placeholder-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all"
+                           required>
+                    
+                    <button id="stockForecastBtn" onclick="runStockForecast()" 
+                            class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300 disabled:opacity-50">
+                        📈 Run ARIMA Forecast
+                    </button>
+                </div>
+                
+                <!-- Stock Error Message -->
+                <div id="stockErrorMsg" class="mt-4 p-4 bg-red-100 border border-red-300 rounded-xl text-red-700 hidden"></div>
+                
+                <!-- Stock Loading Spinner -->
+                <div id="stockLoadingSpinner" class="hidden text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+                    <p class="mt-4 text-indigo-700 font-medium">Fetching stock data and training ARIMA model...</p>
+                </div>
+                
+                <!-- Stock Results -->
+                <div id="stockResults" class="hidden">
+                    <!-- Stock Market Summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Current Price</p>
+                            <p class="text-xl font-bold text-indigo-900" id="stockCurrentPrice">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Last Day High</p>
+                            <p class="text-xl font-bold text-indigo-900" id="stockHighPrice">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Last Day Low</p>
+                            <p class="text-xl font-bold text-indigo-900" id="stockLowPrice">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Model Order (p,d,q)</p>
+                            <p class="text-xl font-bold text-indigo-900" id="stockModelOrder">—</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Chart -->
+                    <div class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100 w-full mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-indigo-900" id="stockChartTitle">Stock Price Forecast Chart</h3>
+                        <div id="stockChart" class="w-full" style="height:50vh;min-height:400px;"></div>
+                    </div>
+                    
+                    <!-- Stock Forecast Table -->
+                    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-indigo-100">
+                        <h3 class="text-lg font-semibold mb-4 text-indigo-900">7-Day Price Forecast</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="border-b border-indigo-200">
+                                        <th class="pb-3 text-indigo-700 font-semibold">Date</th>
+                                        <th class="pb-3 text-indigo-700 font-semibold">Predicted Price (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockForecastTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Information Card -->
+        <div class="bg-white/30 backdrop-blur-xl rounded-2xl p-6 border border-indigo-200/50">
+            <h3 class="text-lg font-semibold text-indigo-800 mb-3">ℹ️ About ARIMA Model</h3>
+            <p class="text-indigo-700/80 text-sm leading-relaxed">
+                ARIMA (AutoRegressive Integrated Moving Average) is a popular statistical model for time series forecasting. 
+                It combines autoregressive (AR) terms, differencing (I) to make the series stationary, and moving average (MA) terms. 
+                This model automatically selects the best parameters (p, d, q) using AIC (Akaike Information Criterion) to minimize prediction error.
+                The forecast is based on the last 4 years of historical data and predicts the next 7 days.
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 border-t border-indigo-200/30 text-center text-indigo-700/60">
+        © 2026 Prithviraj | Stock Portfolio Dashboard
+    </footer>
+
+    <script>
+        // Get CSRF token for Django
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // BTC Forecast
+        async function runBTCForecast() {
+            const btn = document.getElementById('btcForecastBtn');
+            const loadingSpinner = document.getElementById('btcLoadingSpinner');
+            const resultsSection = document.getElementById('btcResults');
+            const errorMsg = document.getElementById('btcErrorMsg');
+            
+            // Reset UI
+            errorMsg.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            
+            // Show loading
+            btn.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/btc-arima/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    errorMsg.textContent = data.error || 'An error occurred.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                
+                // Display results
+                displayBTCResults(data);
+                
+            } catch (error) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                // Hide loading
+                btn.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        function displayBTCResults(data) {
+            const resultsSection = document.getElementById('btcResults');
+            
+            // Calculate current, high, low from historical data
+            const prices = data.historical_prices;
+            const currentPrice = prices[prices.length - 1];
+            const highPrice = Math.max(...prices.slice(-30));
+            const lowPrice = Math.min(...prices.slice(-30));
+            
+            document.getElementById('btcCurrentPrice').textContent = '$ ' + currentPrice.toFixed(2);
+            document.getElementById('btcHighPrice').textContent = '$ ' + highPrice.toFixed(2);
+            document.getElementById('btcLowPrice').textContent = '$ ' + lowPrice.toFixed(2);
+            document.getElementById('btcModelOrder').textContent = data.model_order.join(', ');
+            
+            // Render chart - use last 180 days for better visualization
+            const historicalDates = data.historical_dates.slice(-180);
+            const historicalPrices = data.historical_prices.slice(-180);
+            
+            renderBTCChart(historicalDates, historicalPrices, data.forecast_dates, data.forecast_prices);
+            
+            // Populate forecast table
+            const tableBody = document.getElementById('btcForecastTable');
+            tableBody.innerHTML = '';
+            for (let i = 0; i < data.forecast_dates.length; i++) {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-indigo-100 hover:bg-white/30 transition-colors';
+                row.innerHTML = `
+                    <td class="py-3 text-indigo-800">${data.forecast_dates[i]}</td>
+                    <td class="py-3 font-semibold text-indigo-900">$ ${data.forecast_prices[i].toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            // Show results
+            resultsSection.classList.remove('hidden');
+        }
+
+        function renderBTCChart(historicalDates, historicalPrices, forecastDates, forecastPrices) {
+            // Sample historical data to avoid too many points
+            const step = Math.max(1, Math.floor(historicalDates.length / 100));
+            const sampledHistoricalDates = historicalDates.filter((_, i) => i % step === 0);
+            const sampledHistoricalPrices = historicalPrices.filter((_, i) => i % step === 0);
+            
+            const traces = [];
+            
+            // Historical prices line
+            traces.push({
+                x: sampledHistoricalDates,
+                y: sampledHistoricalPrices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical',
+                line: {
+                    color: '#4f46e5',
+                    width: 2
+                }
+            });
+            
+            // Connect last historical point to first forecast point
+            traces.push({
+                x: [historicalDates[historicalDates.length - 1], forecastDates[0]],
+                y: [historicalPrices[historicalPrices.length - 1], forecastPrices[0]],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Forecast',
+                line: {
+                    color: '#f59e0b',
+                    width: 2,
+                    dash: 'dash'
+                }
+            });
+            
+            // Forecast points
+            traces.push({
+                x: forecastDates,
+                y: forecastPrices,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Predicted',
+                line: {
+                    color: '#f59e0b',
+                    width: 2
+                },
+                marker: {
+                    color: '#f59e0b',
+                    size: 8
+                }
+            });
+            
+            const layout = {
+                template: 'plotly_white',
+                autosize: true,
+                margin: { l: 50, r: 20, t: 20, b: 50 },
+                xaxis: {
+                    title: 'Date',
+                    automargin: true
+                },
+                yaxis: {
+                    title: 'Price (USD)',
+                    automargin: true
+                },
+                legend: {
+                    orientation: 'h',
+                    y: 1.1
+                }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('btcChart', traces, layout, config);
+            
+            setTimeout(function() {
+                Plotly.Plots.resize('btcChart');
+            }, 100);
+        }
+
+        // Stock Forecast
+        async function runStockForecast() {
+            const symbol = document.getElementById('stockSymbol').value.trim();
+            const btn = document.getElementById('stockForecastBtn');
+            const loadingSpinner = document.getElementById('stockLoadingSpinner');
+            const resultsSection = document.getElementById('stockResults');
+            const errorMsg = document.getElementById('stockErrorMsg');
+            
+            // Reset UI
+            errorMsg.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            
+            // Validate input
+            if (!symbol) {
+                errorMsg.textContent = 'Please enter a stock symbol.';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading
+            btn.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/stock-arima/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol
+                    }),
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    errorMsg.textContent = data.error || 'An error occurred.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                
+                // Display results
+                displayStockResults(data, symbol);
+                
+            } catch (error) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                // Hide loading
+                btn.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        function displayStockResults(data, symbol) {
+            const resultsSection = document.getElementById('stockResults');
+            
+            // Calculate current, high, low from historical data
+            const prices = data.historical_prices;
+            const currentPrice = prices[prices.length - 1];
+            const highPrice = Math.max(...prices.slice(-30));
+            const lowPrice = Math.min(...prices.slice(-30));
+            
+            document.getElementById('stockCurrentPrice').textContent = '₹ ' + currentPrice.toFixed(2);
+            document.getElementById('stockHighPrice').textContent = '₹ ' + highPrice.toFixed(2);
+            document.getElementById('stockLowPrice').textContent = '₹ ' + lowPrice.toFixed(2);
+            document.getElementById('stockModelOrder').textContent = data.model_order.join(', ');
+            document.getElementById('stockChartTitle').textContent = symbol + ' Price Forecast Chart';
+            
+            // Render chart - use last 180 days for better visualization
+            const historicalDates = data.historical_dates.slice(-180);
+            const historicalPrices = data.historical_prices.slice(-180);
+            
+            renderStockChart(historicalDates, historicalPrices, data.forecast_dates, data.forecast_prices);
+            
+            // Populate forecast table
+            const tableBody = document.getElementById('stockForecastTable');
+            tableBody.innerHTML = '';
+            for (let i = 0; i < data.forecast_dates.length; i++) {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-indigo-100 hover:bg-white/30 transition-colors';
+                row.innerHTML = `
+                    <td class="py-3 text-indigo-800">${data.forecast_dates[i]}</td>
+                    <td class="py-3 font-semibold text-indigo-900">₹ ${data.forecast_prices[i].toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            // Show results
+            resultsSection.classList.remove('hidden');
+        }
+
+        function renderStockChart(historicalDates, historicalPrices, forecastDates, forecastPrices) {
+            // Sample historical data to avoid too many points
+            const step = Math.max(1, Math.floor(historicalDates.length / 100));
+            const sampledHistoricalDates = historicalDates.filter((_, i) => i % step === 0);
+            const sampledHistoricalPrices = historicalPrices.filter((_, i) => i % step === 0);
+            
+            const traces = [];
+            
+            // Historical prices line
+            traces.push({
+                x: sampledHistoricalDates,
+                y: sampledHistoricalPrices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical',
+                line: {
+                    color: '#4f46e5',
+                    width: 2
+                }
+            });
+            
+            // Connect last historical point to first forecast point
+            traces.push({
+                x: [historicalDates[historicalDates.length - 1], forecastDates[0]],
+                y: [historicalPrices[historicalPrices.length - 1], forecastPrices[0]],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Forecast',
+                line: {
+                    color: '#10b981',
+                    width: 2,
+                    dash: 'dash'
+                }
+            });
+            
+            // Forecast points
+            traces.push({
+                x: forecastDates,
+                y: forecastPrices,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Predicted',
+                line: {
+                    color: '#10b981',
+                    width: 2
+                },
+                marker: {
+                    color: '#10b981',
+                    size: 8
+                }
+            });
+            
+            const layout = {
+                template: 'plotly_white',
+                autosize: true,
+                margin: { l: 50, r: 20, t: 20, b: 50 },
+                xaxis: {
+                    title: 'Date',
+                    automargin: true
+                },
+                yaxis: {
+                    title: 'Price (₹)',
+                    automargin: true
+                },
+                legend: {
+                    orientation: 'h',
+                    y: 1.1
+                }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('stockChart', traces, layout, config);
+            
+            setTimeout(function() {
+                Plotly.Plots.resize('stockChart');
+            }, 100);
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('stockSymbol').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                runStockForecast();
+            }
+        });
+
+        // Handle window resize for charts
+        window.addEventListener('resize', function() {
+            Plotly.Plots.resize('btcChart');
+            Plotly.Plots.resize('stockChart');
+        });
+    </script>
+
+</body>
+</html>

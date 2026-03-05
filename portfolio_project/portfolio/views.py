@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .models import Portfolio, PortfolioStock
 from .ml_engine import cluster_portfolio
+from .arima_engine import run_arima_forecast, convert_indian_symbol
 import yfinance as yf
 import pandas as pd
 import math
@@ -512,6 +513,106 @@ def predict_stock_api(request):
         
         return JsonResponse(result)
         
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON request'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error: {str(e)}'
+        })
+
+# --------------------------------
+# ARIMA PRICE FORECAST
+# --------------------------------
+
+def arima_prediction(request):
+    """Render the ARIMA prediction page."""
+    return render(request, "portfolio/arima_prediction.html")
+
+
+@csrf_exempt
+@require_POST
+def btc_arima_api(request):
+    """
+    API endpoint for BTC/USD ARIMA forecast.
+    """
+    import json
+    
+    try:
+        # Run ARIMA forecast for BTC-USD
+        result = run_arima_forecast("BTC-USD", period="4y", forecast_days=7)
+        
+        if result.get('success'):
+            return JsonResponse({
+                'success': True,
+                'historical_dates': result.get('historical_dates', []),
+                'historical_prices': result.get('historical_prices', []),
+                'forecast_dates': result.get('forecast_dates', []),
+                'forecast_prices': result.get('forecast_prices', []),
+                'model_order': result.get('model_order', []),
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': result.get('error', 'Failed to generate forecast')
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Error: {str(e)}'
+        })
+
+
+@csrf_exempt
+@require_POST
+def stock_arima_api(request):
+    """
+    API endpoint for Indian stock ARIMA forecast.
+    
+    Expected POST data:
+    - symbol: Stock ticker symbol (e.g., 'RELIANCE', 'TCS', 'HDFCBANK')
+    """
+    import json
+    
+    try:
+        # Parse request body
+        data = json.loads(request.body)
+        
+        # Get symbol
+        symbol = data.get('symbol', '').strip().upper()
+        
+        # Validate symbol
+        if not symbol:
+            return JsonResponse({
+                'success': False,
+                'error': 'Please provide a stock symbol.'
+            })
+        
+        # Convert to NSE format
+        ticker = convert_indian_symbol(symbol)
+        
+        # Run ARIMA forecast
+        result = run_arima_forecast(ticker, period="4y", forecast_days=7)
+        
+        if result.get('success'):
+            return JsonResponse({
+                'success': True,
+                'historical_dates': result.get('historical_dates', []),
+                'historical_prices': result.get('historical_prices', []),
+                'forecast_dates': result.get('forecast_dates', []),
+                'forecast_prices': result.get('forecast_prices', []),
+                'model_order': result.get('model_order', []),
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': result.get('error', 'Failed to generate forecast')
+            })
+            
     except json.JSONDecodeError:
         return JsonResponse({
             'success': False,

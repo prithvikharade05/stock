@@ -16,4 +16,8 @@ urlpatterns = [
     # Stock Prediction URLs
     path("stock-prediction/", views.stock_prediction, name="stock_prediction"),
     path("api/predict-stock/", views.predict_stock_api, name="predict_stock_api"),
+    # ARIMA Price Forecast URLs
+    path("arima-prediction/", views.arima_prediction, name="arima_prediction"),
+    path("api/btc-arima/", views.btc_arima_api, name="btc_arima_api"),
+    path("api/stock-arima/", views.stock_arima_api, name="stock_arima_api"),
 ]
