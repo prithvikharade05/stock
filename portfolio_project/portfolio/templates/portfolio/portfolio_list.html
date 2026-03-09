@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Portfolios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+    <!-- Header -->
+    <header class="px-8 py-5 border-b border-indigo-200/50 bg-white/30 backdrop-blur-xl shadow-sm">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">📈 Stock Portfolio</h1>
+                <p class="text-indigo-600/80 mt-1 font-medium">Create and manage your portfolios</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/banks/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏦 Bank Stocks
+                </a>
+                <a href="/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Create Portfolio Section -->
+        <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-xl shadow-indigo-500/20 border border-white/50">
+            <h2 class="text-xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent mb-4">Create New Portfolio</h2>
+            <form method="POST" action="{% url 'create_portfolio' %}" class="flex gap-4">
+                {% csrf_token %}
+                <input type="text" name="name" placeholder="Portfolio Name (e.g., My Growth Portfolio)" 
+                       required maxlength="100"
+                       class="flex-1 px-5 py-3 bg-white/60 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-900 placeholder-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all">
+                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300">
+                    ➕ Create
+                </button>
+            </form>
+        </div>
+
+        <!-- ML Features Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Stock Price Prediction Card -->
+            <a href="{% url 'stock_prediction' %}" 
+               class="bg-white/40 backdrop-blur-xl rounded-3xl p-6 hover:bg-white/60 transition-all duration-300 border border-white/50 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/20 group">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">Stock Price Prediction</h3>
+                    <span class="text-3xl">🔮</span>
+                </div>
+                <div class="space-y-2 text-indigo-800/80">
+                    <p>Predict stock prices using <span class="text-indigo-900 font-bold">Regression taking Last 3 Years of Data</span> models</p>
+                    <p class="text-sm text-indigo-600/70">Linear & Logistic Regression</p>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Portfolios Grid -->
+        {% if portfolios %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for portfolio in portfolios %}
+            <a href="{% url 'portfolio_detail' portfolio.id %}" 
+               class="bg-white/40 backdrop-blur-xl rounded-3xl p-6 hover:bg-white/60 transition-all duration-300 border border-white/50 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/20 group">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform">{{ portfolio.name }}</h3>
+                    <span class="text-3xl">📊</span>
+                </div>
+                <div class="space-y-2 text-indigo-800/80">
+                    <p>Stocks: <span class="text-indigo-900 font-bold">{{ portfolio.total_stocks }}</span></p>
+                    <p>Created: <span class="text-indigo-900">{{ portfolio.created_at|date:"M d, Y" }}</span></p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16 bg-white/30 backdrop-blur-xl rounded-3xl border border-white/50">
+            <p class="text-indigo-800/70 text-lg">No portfolios yet. Create your first portfolio above!</p>
+        </div>
+        {% endif %}
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 border-t border-indigo-200/30 text-center text-indigo-700/60">
+        © 2026 Prithviraj | Stock Portfolio Dashboard
+    </footer>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="fixed bottom-6 right-6 space-y-2">
+        {% for message in messages %}
+        <div class="px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl shadow-xl shadow-indigo-500/30 backdrop-blur-sm">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</body>
+</html>
+

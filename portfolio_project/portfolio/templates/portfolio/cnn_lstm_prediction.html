@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deep Learning Stock Prediction (CNN + LSTM)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+    <!-- Header -->
+    <header class="px-8 py-5 border-b border-indigo-200/50 bg-white/30 backdrop-blur-xl shadow-sm">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">🧠 Deep Learning Stock Prediction (CNN + LSTM)</h1>
+                <p class="text-indigo-600/80 mt-1 font-medium">Advanced deep learning model for accurate price forecasting</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/portfolio/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    📊 Portfolio
+                </a>
+                <a href="/banks/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏦 Bank Stocks
+                </a>
+                <a href="/" class="px-4 py-2 bg-white/40 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-700 font-medium hover:bg-white/60 transition-all duration-200">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Stock Prediction Section -->
+        <div class="mb-12">
+            <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 shadow-xl shadow-indigo-500/20 border border-white/50">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent mb-6">🔮 Predict Stock Prices Using Deep Learning</h2>
+                
+                <!-- Input Section -->
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol (e.g., RELIANCE, TCS, HDFCBANK, BTC-USD)" 
+                           class="flex-1 px-5 py-3 bg-white/60 backdrop-blur-sm border border-indigo-200 rounded-xl text-indigo-900 placeholder-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all"
+                           required>
+                    
+                    <button id="predictBtn" onclick="runPrediction()" 
+                            class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300 disabled:opacity-50">
+                        🧠 Run CNN+LSTM Prediction
+                    </button>
+                </div>
+                
+                <!-- Example Symbols -->
+                <div class="mb-6">
+                    <p class="text-sm text-indigo-600 mb-2">Example symbols:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-indigo-100 rounded-full text-sm text-indigo-700 cursor-pointer hover:bg-indigo-200" onclick="setSymbol('BTC-USD')">BTC-USD</span>
+                        <span class="px-3 py-1 bg-indigo-100 rounded-full text-sm text-indigo-700 cursor-pointer hover:bg-indigo-200" onclick="setSymbol('RELIANCE')">RELIANCE</span>
+                        <span class="px-3 py-1 bg-indigo-100 rounded-full text-sm text-indigo-700 cursor-pointer hover:bg-indigo-200" onclick="setSymbol('TCS')">TCS</span>
+                        <span class="px-3 py-1 bg-indigo-100 rounded-full text-sm text-indigo-700 cursor-pointer hover:bg-indigo-200" onclick="setSymbol('INFY')">INFY</span>
+                        <span class="px-3 py-1 bg-indigo-100 rounded-full text-sm text-indigo-700 cursor-pointer hover:bg-indigo-200" onclick="setSymbol('HDFCBANK')">HDFCBANK</span>
+                    </div>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="errorMsg" class="mt-4 p-4 bg-red-100 border border-red-300 rounded-xl text-red-700 hidden"></div>
+                
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="hidden text-center py-8">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+                    <p class="mt-4 text-indigo-700 font-medium">Training CNN+LSTM model... This may take a minute.</p>
+                    <p class="text-indigo-600/60 text-sm mt-2">Fetching 4 years of historical data and training deep learning model</p>
+                </div>
+                
+                <!-- Results Section -->
+                <div id="resultsSection" class="hidden">
+                    <!-- Model Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">Model Accuracy</p>
+                            <p class="text-2xl font-bold text-indigo-900" id="modelAccuracy">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">MAE</p>
+                            <p class="text-2xl font-bold text-indigo-900" id="modelMAE">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">RMSE</p>
+                            <p class="text-2xl font-bold text-indigo-900" id="modelRMSE">—</p>
+                        </div>
+                        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-100">
+                            <p class="text-sm text-indigo-600">R² Score</p>
+                            <p class="text-2xl font-bold text-indigo-900" id="modelR2">—</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Predictions Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-4 text-white">
+                            <p class="text-sm text-indigo-100">Day 1</p>
+                            <p class="text-xl font-bold mt-1" id="pred1">—</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-4 text-white">
+                            <p class="text-sm text-indigo-100">Day 2</p>
+                            <p class="text-xl font-bold mt-1" id="pred2">—</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-4 text-white">
+                            <p class="text-sm text-indigo-100">Day 3</p>
+                            <p class="text-xl font-bold mt-1" id="pred3">—</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-4 text-white">
+                            <p class="text-sm text-indigo-100">Day 4</p>
+                            <p class="text-xl font-bold mt-1" id="pred4">—</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl p-4 text-white">
+                            <p class="text-sm text-indigo-100">Day 5</p>
+                            <p class="text-xl font-bold mt-1" id="pred5">—</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart -->
+                    <div class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100 w-full mb-6">
+                        <h3 class="text-lg font-semibold mb-3 text-indigo-900">Price Prediction Chart</h3>
+                        <div id="predictionChart" class="w-full" style="height:50vh;min-height:400px;"></div>
+                    </div>
+                    
+                    <!-- Prediction Table -->
+                    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-indigo-100">
+                        <h3 class="text-lg font-semibold mb-4 text-indigo-900">5-Day Price Forecast</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="border-b border-indigo-200">
+                                        <th class="pb-3 text-indigo-700 font-semibold">Date</th>
+                                        <th class="pb-3 text-indigo-700 font-semibold">Predicted Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="forecastTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Information Card -->
+        <div class="bg-white/30 backdrop-blur-xl rounded-2xl p-6 border border-indigo-200/50">
+            <h3 class="text-lg font-semibold text-indigo-800 mb-3">About CNN + LSTM Model</h3>
+            <p class="text-indigo-700/80 text-sm leading-relaxed">
+                This deep learning model combines Convolutional Neural Networks (CNN) and Long Short-Term Memory (LSTM) networks 
+                to capture both local patterns and long-term dependencies in stock price data. The CNN layer extracts local features 
+                from the input sequences, while the LSTM layer learns temporal patterns over longer periods. The model is trained on 
+                4 years of historical data using a 60-day lookback window to predict the next 5 days of closing prices.
+            </p>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white/40 p-4 rounded-xl">
+                    <h4 class="font-semibold text-indigo-800 mb-2">Model Architecture</h4>
+                    <ul class="text-sm text-indigo-700/80 space-y-1">
+                        <li>• Conv1D (64 filters, kernel_size=3)</li>
+                        <li>• MaxPooling1D (pool_size=2)</li>
+                        <li>• Dropout (0.2)</li>
+                        <li>• LSTM (100 units)</li>
+                        <li>• Dense (50 units)</li>
+                        <li>• Output (1 unit)</li>
+                    </ul>
+                </div>
+                <div class="bg-white/40 p-4 rounded-xl">
+                    <h4 class="font-semibold text-indigo-800 mb-2">Training Configuration</h4>
+                    <ul class="text-sm text-indigo-700/80 space-y-1">
+                        <li>• Epochs: 20</li>
+                        <li>• Batch Size: 32</li>
+                        <li>• Lookback: 60 days</li>
+                        <li>• Optimizer: Adam</li>
+                        <li>• Loss: Mean Squared Error</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 border-t border-indigo-200/30 text-center text-indigo-700/60">
+        © 2026 Prithviraj | Stock Portfolio Dashboard
+    </footer>
+
+    <script>
+        // Set example symbol
+        function setSymbol(symbol) {
+            document.getElementById('stockSymbol').value = symbol;
+        }
+
+        // Get CSRF token for Django
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Run prediction
+        async function runPrediction() {
+            const symbol = document.getElementById('stockSymbol').value.trim();
+            const btn = document.getElementById('predictBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // Reset UI
+            errorMsg.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            
+            // Validate input
+            if (!symbol) {
+                errorMsg.textContent = 'Please enter a stock symbol.';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading
+            btn.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/cnn-lstm-predict/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol
+                    }),
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    errorMsg.textContent = data.error || 'An error occurred.';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+                
+                // Display results
+                displayResults(data);
+                
+            } catch (error) {
+                errorMsg.textContent = 'Network error. Please try again.';
+                errorMsg.classList.remove('hidden');
+                console.error('Error:', error);
+            } finally {
+                // Hide loading
+                btn.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            // Display model metrics
+            document.getElementById('modelAccuracy').textContent = data.accuracy ? data.accuracy + '%' : '—';
+            document.getElementById('modelMAE').textContent = data.mae ? data.mae : '—';
+            document.getElementById('modelRMSE').textContent = data.rmse ? data.rmse : '—';
+            document.getElementById('modelR2').textContent = data.r2 ? data.r2 : '—';
+            
+            // Display predictions
+            const predictions = data.predictions;
+            const predictionDates = data.prediction_dates;
+            
+            document.getElementById('pred1').textContent = predictions[0] ? 'Rs' + predictions[0].toFixed(2) : '—';
+            document.getElementById('pred2').textContent = predictions[1] ? 'Rs' + predictions[1].toFixed(2) : '—';
+            document.getElementById('pred3').textContent = predictions[2] ? 'Rs' + predictions[2].toFixed(2) : '—';
+            document.getElementById('pred4').textContent = predictions[3] ? 'Rs' + predictions[3].toFixed(2) : '—';
+            document.getElementById('pred5').textContent = predictions[4] ? 'Rs' + predictions[4].toFixed(2) : '—';
+            
+            // Render chart
+            renderChart(data.historical_dates, data.historical_prices, predictionDates, predictions);
+            
+            // Populate forecast table
+            const tableBody = document.getElementById('forecastTable');
+            tableBody.innerHTML = '';
+            for (let i = 0; i < predictionDates.length; i++) {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-indigo-100 hover:bg-white/30 transition-colors';
+                row.innerHTML = `
+                    <td class="py-3 text-indigo-800">${predictionDates[i]}</td>
+                    <td class="py-3 font-semibold text-indigo-900">$ ${predictions[i].toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+            
+            // Show results
+            resultsSection.classList.remove('hidden');
+        }
+
+        function renderChart(historicalDates, historicalPrices, forecastDates, forecastPrices) {
+            // Sample historical data to avoid too many points
+            const step = Math.max(1, Math.floor(historicalDates.length / 100));
+            const sampledHistoricalDates = historicalDates.filter((_, i) => i % step === 0);
+            const sampledHistoricalPrices = historicalPrices.filter((_, i) => i % step === 0);
+            
+            const traces = [];
+            
+            // Historical prices line
+            traces.push({
+                x: sampledHistoricalDates,
+                y: sampledHistoricalPrices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Historical',
+                line: {
+                    color: '#4f46e5',
+                    width: 2
+                }
+            });
+            
+            // Connect last historical point to first forecast point
+            traces.push({
+                x: [historicalDates[historicalDates.length - 1], forecastDates[0]],
+                y: [historicalPrices[historicalPrices.length - 1], forecastPrices[0]],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Prediction',
+                line: {
+                    color: '#f59e0b',
+                    width: 2,
+                    dash: 'dash'
+                }
+            });
+            
+            // Forecast points
+            traces.push({
+                x: forecastDates,
+                y: forecastPrices,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Predicted',
+                line: {
+                    color: '#f59e0b',
+                    width: 2
+                },
+                marker: {
+                    color: '#f59e0b',
+                    size: 8
+                }
+            });
+            
+            const layout = {
+                template: 'plotly_white',
+                autosize: true,
+                margin: { l: 50, r: 20, t: 20, b: 50 },
+                xaxis: {
+                    title: 'Date',
+                    automargin: true
+                },
+                yaxis: {
+                    title: 'Price (Rs)',
+                    automargin: true
+                },
+                legend: {
+                    orientation: 'h',
+                    y: 1.1
+                }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot('predictionChart', traces, layout, config);
+            
+            setTimeout(function() {
+                Plotly.Plots.resize('predictionChart');
+            }, 100);
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('stockSymbol').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                runPrediction();
+            }
+        });
+
+        // Handle window resize for charts
+        window.addEventListener('resize', function() {
+            Plotly.Plots.resize('predictionChart');
+        });
+    </script>
+
+</body>
+</html>
+

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Banking Sector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+<header class="px-8 py-5 border-b border-indigo-200/50 bg-white/30 backdrop-blur-xl shadow-sm">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">🏦 Banking Sector</h1>
+            <p class="text-indigo-600/80 mt-1 font-medium">Live prices • Valuation • Market cap</p>
+        </div>
+        <a href="/portfolio/" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-300">
+            📈 Go to Portfolio
+        </a>
+    </div>
+</header>
+
+<div class="max-w-7xl mx-auto mt-10 px-6 pb-10">
+
+    <div class="rounded-3xl bg-white/40 backdrop-blur-xl shadow-2xl shadow-indigo-500/20 border border-white/50 overflow-hidden">
+        <table class="w-full text-sm">
+
+            <thead class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white">
+                <tr>
+                    <th class="text-left px-6 py-4 font-semibold">Bank</th>
+                    <th class="text-right px-6 py-4 font-semibold">LTP</th>
+                    <th class="text-right px-6 py-4 font-semibold">High</th>
+                    <th class="text-right px-6 py-4 font-semibold">Low</th>
+                    <th class="text-right px-6 py-4 font-semibold">1Y Low</th>
+                    <th class="text-right px-6 py-4 font-semibold">1Y High</th>
+                    <th class="text-right px-6 py-4 font-semibold">Discount (%)</th>
+                    <th class="text-right px-6 py-4 font-semibold">P/E</th>
+                    <th class="text-right px-6 py-4 font-semibold">Market Cap (₹ Cr)</th>
+                    <th class="text-center px-6 py-4 font-semibold">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for bank in banks %}
+                <tr class="border-t border-indigo-200/30 hover:bg-white/60 transition-all duration-200">
+                    <td class="px-6 py-4 font-semibold">
+                        <a href="/banks/{{ bank.symbol }}/"
+                           class="text-indigo-700 hover:text-violet-700 hover:underline transition-colors">
+                            {{ bank.name }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4 text-right font-medium">{% if bank.ltp %}{{ bank.ltp|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.high %}{{ bank.high|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.low %}{{ bank.low|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.year_low %}{{ bank.year_low|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.year_high %}{{ bank.year_high|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.discount_pct is not none %}<span class="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">{{ bank.discount_pct|floatformat:2 }}%</span>{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.pe %}{{ bank.pe|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-right">{% if bank.market_cap %}{{ bank.market_cap|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="openAddModal('{{ bank.symbol }}', '{{ bank.name }}')"
+                                class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-violet-500 text-white rounded-lg font-medium shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 transition-all duration-200 text-sm">
+                            + Add
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+<!-- Add Stock Modal -->
+<div id="addModal" class="fixed inset-0 bg-indigo-900/30 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white/90 backdrop-blur-xl rounded-3xl p-8 w-full max-w-md mx-4 shadow-2xl shadow-indigo-500/30 border border-white/50">
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent mb-6">Add Stock to Portfolio</h2>
+        <form id="addStockForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="stock_symbol" id="modalSymbol">
+            <input type="hidden" name="stock_name" id="modalName">
+            
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-indigo-800 mb-2">Select Portfolio</label>
+                <select name="portfolio_id" id="portfolioSelect" required class="w-full px-4 py-3 bg-white/80 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all">
+                    <option value="">Choose a portfolio...</option>
+                </select>
+            </div>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-indigo-800 mb-2">Quantity</label>
+                <input type="number" name="quantity" min="1" value="1" required 
+                       class="w-full px-4 py-3 bg-white/80 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-indigo-800 mb-2">Purchase Price (₹) - Optional</label>
+                <input type="number" name="purchase_price" step="0.01" min="0" 
+                       class="w-full px-4 py-3 bg-white/80 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition-all">
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] transition-all duration-200">
+                    Add Stock
+                </button>
+                <button type="button" onclick="closeAddModal()" class="flex-1 py-3 bg-indigo-100 text-indigo-700 rounded-xl font-semibold hover:bg-indigo-200 transition-all duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+async function openAddModal(symbol, name) {
+    document.getElementById('modalSymbol').value = symbol;
+    document.getElementById('modalName').value = name;
+    
+    // Fetch portfolios
+    const response = await fetch('/api/portfolios/');
+    const data = await response.json();
+    
+    const select = document.getElementById('portfolioSelect');
+    select.innerHTML = '<option value="">Choose a portfolio...</option>';
+    
+    if (data.portfolios.length === 0) {
+        select.innerHTML = '<option value="">No portfolios - create one first!</option>';
+        alert('Please create a portfolio first! Go to /portfolio/ to create one.');
+        return;
+    }
+    
+    data.portfolios.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = p.name;
+        select.appendChild(option);
+    });
+    
+    document.getElementById('addModal').classList.remove('hidden');
+    document.getElementById('addModal').classList.add('flex');
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').classList.add('hidden');
+    document.getElementById('addModal').classList.remove('flex');
+}
+
+document.getElementById('portfolioSelect').addEventListener('change', function() {
+    const portfolioId = this.value;
+    if (portfolioId) {
+        document.getElementById('addStockForm').action = `/portfolio/${portfolioId}/add/`;
+    }
+});
+</script>
+
+</body>
+</html>

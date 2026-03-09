@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prithvi Quant Labs - AI-Powered Stock Prediction</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+<style>
+
+/* ===============================
+Theme Variables
+=============================== */
+
+:root{
+--primary-gradient: linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#db2777 100%);
+--glass-bg: rgba(255,255,255,0.4);
+--glass-border: rgba(255,255,255,0.5);
+}
+
+/* ===============================
+HEADER
+=============================== */
+
+.main-header{
+background: rgba(255,255,255,0.35);
+backdrop-filter: blur(10px);
+padding:30px 40px;
+border-bottom:1px solid rgba(255,255,255,0.4);
+text-align:center;
+}
+
+.logo-container{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.logo{
+width:150px;
+height:120px;
+border-radius:14px;
+object-fit:cover;
+}
+
+.logo-text h1{
+font-size:48px;
+font-weight:800;
+background:linear-gradient(to right,#4f46e5,#7c3aed,#db2777);
+-webkit-background-clip:text;
+color:transparent;
+}
+
+.tagline{
+font-size:30px;
+color:#4338ca;
+margin-top:8px;
+font-weight:600;
+}
+
+/* ===============================
+MARKET TICKER
+=============================== */
+
+.ticker-wrap{
+width:100%;
+overflow:hidden;
+background:#1e1b4b;
+height:2.5cm;
+display:flex;
+align-items:center;
+}
+
+.ticker{
+display:flex;
+white-space:nowrap;
+width:200%;
+}
+
+.ticker-track{
+display:flex;
+white-space:nowrap;
+animation:ticker-scroll 29s linear infinite;
+}
+
+.ticker-track:hover{
+animation-play-state:paused;
+}
+
+.ticker div{
+color:white;
+font-size:32px;
+font-weight:600;
+margin-right:60px;
+}
+
+@keyframes ticker-scroll{
+0%{ transform:translateX(0); }
+100%{ transform:translateX(-50%); }
+}
+
+.ticker-loading{
+color:white;
+font-size:18px;
+padding-left:30px;
+}
+
+.ticker-change.up{
+color:#22c55e;
+}
+
+.ticker-change.down{
+color:#ef4444;
+}
+
+/* ===============================
+CARDS
+=============================== */
+
+.cards-container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:40px;
+max-width:1200px;
+margin:auto;
+}
+
+.premium-card{
+background:var(--glass-bg);
+backdrop-filter:blur(12px);
+border:1px solid var(--glass-border);
+border-radius:18px;
+padding:35px;
+transition:all .3s ease;
+}
+
+.premium-card:hover{
+transform:translateY(-6px);
+box-shadow:0 10px 30px rgba(0,0,0,0.15);
+}
+
+.card-icon{
+font-size:40px;
+display:block;
+margin-bottom:10px;
+}
+
+/* ===============================
+FOOTER
+=============================== */
+
+.main-footer{
+margin-top:50px;
+background:rgba(255,255,255,0.35);
+backdrop-filter:blur(10px);
+border-top:1px solid rgba(255,255,255,0.4);
+}
+
+/* Footer Layout */
+
+.footer-wrapper{
+display:flex;
+flex-wrap:wrap;
+min-height:180px;
+}
+
+/* LEFT IMAGE (40%) */
+
+.footer-image{
+width:30%;
+}
+
+.footer-image img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+/* RIGHT CONTENT (60%) */
+
+.footer-content{
+width:70%;
+padding:60px 40px;
+display:flex;
+flex-direction:column;
+gap:30px;
+}
+
+.footer-columns{
+display:flex;
+gap:80px;
+}
+
+.footer-section h4{
+font-weight:700;
+margin-bottom:10px;
+}
+
+.footer-section ul{
+list-style:none;
+padding:0;
+}
+
+.footer-section li{
+margin-bottom:6px;
+color:#444;
+}
+
+</style>
+
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+<!-- HEADER -->
+
+<header class="main-header">
+
+<div class="logo-container">
+
+<img src="{% static 'images/main1.png' %}" class="logo">
+
+<div class="logo-text">
+<h1>Prithvi Quant Labs</h1>
+<p class="tagline">The Future of AI-Powered Trading</p>
+</div>
+
+</div>
+
+</header>
+
+
+<!-- MARKET TICKER -->
+
+<div class="ticker-wrap">
+<div class="ticker" id="ticker-content">
+<div class="ticker-loading">Loading market data...</div>
+</div>
+</div>
+
+
+<!-- MAIN CONTENT -->
+
+<main class="p-8">
+
+<div class="text-center mb-10">
+
+<h2 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">
+Welcome to Your AI Trading Dashboard
+</h2>
+
+<p class="text-indigo-600/80 mt-2 text-lg">
+Analyze markets, predict prices, and manage portfolios with cutting-edge AI
+</p>
+
+</div>
+
+<div class="cards-container">
+
+<a href="/banks/" class="premium-card">
+<span class="card-icon">🏦</span>
+<h2 class="text-2xl font-bold">Bank Sector</h2>
+<p>View major Indian banking stocks with detailed analysis and insights</p>
+</a>
+
+<a href="/portfolio/" class="premium-card">
+<span class="card-icon">📈</span>
+<h2 class="text-2xl font-bold">Stock Portfolio</h2>
+<p>Create and manage your investment portfolio with real-time tracking</p>
+</a>
+
+<a href="/stock-prediction/" class="premium-card">
+<span class="card-icon">🔮</span>
+<h2 class="text-2xl font-bold">Stock Prediction</h2>
+<p>AI-powered stock price predictions using machine learning models</p>
+</a>
+
+<a href="/arima-prediction/" class="premium-card">
+<span class="card-icon">📊</span>
+<h2 class="text-2xl font-bold">ARIMA Price Forecast</h2>
+<p>Time series forecasting using ARIMA model</p>
+</a>
+
+<a href="/cnn-lstm-prediction/" class="premium-card">
+<span class="card-icon">🧠</span>
+<h2 class="text-2xl font-bold">Deep Learning Prediction</h2>
+<p>Advanced CNN + LSTM deep learning model for accurate predictions</p>
+</a>
+
+</div>
+
+</main>
+
+
+<!-- FOOTER -->
+
+<footer class="main-footer">
+
+<div class="footer-wrapper">
+
+<!-- IMAGE -->
+
+<div class="footer-image">
+<img src="{% static 'images/secondlogo.jpeg' %}">
+</div>
+
+<!-- CONTENT -->
+
+<div class="footer-content">
+
+<div>
+<h3 class="text-3xl font-bold">Prithvi Quant Labs</h3>
+<p class="text-lg text-gray-700">AI-Powered Quantitative Trading Platform</p>
+
+<p>
+An advanced stock intelligence platform designed to analyze financial markets
+using machine learning and deep learning models.
+</p>
+</div>
+
+<div class="footer-columns">
+
+<div class="footer-section">
+<h4>ML Models</h4>
+<h4>
+<h4>ARIMA</h4>
+<h4>Linear Regression</h4>
+<h4>Logistic Regression</h4>
+<h4>KNN</h4>
+<h4>CNN + LSTM</h4>
+</h4>
+</div>
+
+<div class="footer-section">
+<h4>Features</h4>
+<h4>
+<h4>Live Market Data</h4>
+<h4>AI Predictions</h4>
+<h4>Portfolio Management</h4>
+<h4>Sector Analysis</h4>
+<h4>Deep Learning Forecasting</h4>
+</h4>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="text-center py-6 border-t border-indigo-200/30">
+<p class="text-indigo-600/60 text-sm"><h4>
+© 2026 Prithvi Quant Labs | Powered by AI & Machine Learning </h4>
+</p>
+</div>
+
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ symbol }} – Stock Analysis</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-[rgb(203,213,254)] to-indigo-300 text-indigo-950">
+
+<!-- HEADER -->
+<header class="py-6 border-b border-indigo-200 text-center bg-white/40 backdrop-blur-md">
+    <h1 class="text-3xl font-bold text-indigo-900 tracking-wide">
+        {{ symbol }} – Stock Analysis
+    </h1>
+</header>
+
+<!-- FLOATING STAT CARDS -->
+<div class="max-w-7xl mx-auto px-8 mt-10 grid grid-cols-1 md:grid-cols-4 gap-6">
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">Latest Close</p>
+        <p class="text-2xl font-bold mt-1">Rs {% if data.0.Close %}{{ data.0.Close|floatformat:2 }}{% else %}—{% endif %}</p>
+    </div>
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">30 Day MA</p>
+        <p class="text-2xl font-bold mt-1">Rs {% if data.0.MA30 %}{{ data.0.MA30|floatformat:2 }}{% else %}—{% endif %}</p>
+    </div>
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">RSI (14)</p>
+        <p class="text-2xl font-bold mt-1">{% if data.0.RSI %}{{ data.0.RSI|floatformat:2 }}{% else %}—{% endif %}</p>
+    </div>
+
+    <div class="bg-white/70 backdrop-blur-lg p-5 rounded-2xl shadow-xl border border-indigo-100">
+        <p class="text-sm text-indigo-600">P/E Ratio</p>
+        <p class="text-2xl font-bold mt-1">{% if pe_data %}{{ pe_data.0.pe|floatformat:2 }}{% else %}—{% endif %}</p>
+    </div>
+
+</div>
+
+<!-- RETURNS SECTION -->
+<section class="max-w-7xl mx-auto px-8 mt-10">
+    <h2 class="text-xl font-semibold mb-4 text-indigo-900">Stock Performance</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        
+        <!-- 1W Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">1 Week</p>
+            <p class="text-xl font-bold mt-1 {% if returns.1W and returns.1W > 0 %}text-green-600{% elif returns.1W and returns.1W < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.1W %}{{ returns.1W|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- 1M Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">1 Month</p>
+            <p class="text-xl font-bold mt-1 {% if returns.1M and returns.1M > 0 %}text-green-600{% elif returns.1M and returns.1M < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.1M %}{{ returns.1M|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- 3M Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">3 Months</p>
+            <p class="text-xl font-bold mt-1 {% if returns.3M and returns.3M > 0 %}text-green-600{% elif returns.3M and returns.3M < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.3M %}{{ returns.3M|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- 6M Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">6 Months</p>
+            <p class="text-xl font-bold mt-1 {% if returns.6M and returns.6M > 0 %}text-green-600{% elif returns.6M and returns.6M < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.6M %}{{ returns.6M|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- YTD Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">YTD</p>
+            <p class="text-xl font-bold mt-1 {% if returns.YTD and returns.YTD > 0 %}text-green-600{% elif returns.YTD and returns.YTD < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.YTD %}{{ returns.YTD|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- 1Y Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">1 Year</p>
+            <p class="text-xl font-bold mt-1 {% if returns.1Y and returns.1Y > 0 %}text-green-600{% elif returns.1Y and returns.1Y < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.1Y %}{{ returns.1Y|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- 3Y Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">3 Years</p>
+            <p class="text-xl font-bold mt-1 {% if returns.3Y and returns.3Y > 0 %}text-green-600{% elif returns.3Y and returns.3Y < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.3Y %}{{ returns.3Y|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+        <!-- 5Y Return -->
+        <div class="bg-white/70 backdrop-blur-lg p-4 rounded-2xl shadow-xl border border-indigo-100 hover:scale-105 transition-transform">
+            <p class="text-sm text-indigo-600">5 Years</p>
+            <p class="text-xl font-bold mt-1 {% if returns.5Y and returns.5Y > 0 %}text-green-600{% elif returns.5Y and returns.5Y < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                {% if returns.5Y %}{{ returns.5Y|floatformat:2 }}%{% else %}—{% endif %}
+            </p>
+        </div>
+
+    </div>
+</section>
+
+<!-- FILTER -->
+<div class="flex justify-center gap-4 mt-10">
+    <form method="get">
+        <select name="period"
+                onchange="this.form.submit()"
+                class="px-4 py-2 rounded-xl bg-white/70 border border-indigo-200 shadow-md focus:ring-2 focus:ring-indigo-400">
+            <option value="1mo" {% if period == "1mo" %}selected{% endif %}>1 Month</option>
+            <option value="3mo" {% if period == "3mo" %}selected{% endif %}>3 Months</option>
+            <option value="6mo" {% if period == "6mo" %}selected{% endif %}>6 Months</option>
+            <option value="1y"  {% if period == "1y"  %}selected{% endif %}>1 Year</option>
+            <option value="5y"  {% if period == "5y"  %}selected{% endif %}>5 Years</option>
+            <option value="max" {% if period == "max" %}selected{% endif %}>Max</option>
+        </select>
+    </form>
+
+    <a href="/banks/"
+       class="px-5 py-2 rounded-xl bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition">
+       ← Back
+    </a>
+</div>
+
+<!-- CHART SECTIONS -->
+<div class="flex flex-col space-y-24 mt-16 px-8 max-w-7xl mx-auto">
+
+    <section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Price Action (Candlestick + MA)</h2>
+        <div id="price-chart" class="w-full" style="height:700px;"></div>
+</section>
+
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">RSI (14)</h2>
+        <div id="rsi-chart" class="w-full" style="height:400px;"></div>
+</section>
+
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Relative Strength vs NIFTY</h2>
+        <div id="rs-chart" class="w-full" style="height:400px;"></div>
+</section>
+
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">PE Ratio Trend</h2>
+        <div id="pe-chart" class="w-full" style="height:400px;"></div>
+</section>
+
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Quarterly Revenue & Profit</h2>
+        <div id="revenue-chart" class="w-full" style="height:620px;"></div>
+</section>
+
+<section class="bg-white/60 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-indigo-100">
+    <h2 class="text-xl font-semibold mb-3 text-indigo-900">Quarterly EPS (Last 3 Years)</h2>
+        <div id="eps-chart" class="w-full" style="height:580px;"></div>
+</section>
+
+</div>
+
+{{ data|json_script:"price-data" }}
+{{ pe_data|json_script:"pe-data" }}
+{{ quarterly|json_script:"quarterly-data" }}
+{{ quarterly_eps|json_script:"eps-data" }}
+
+<script>
+const price = JSON.parse(document.getElementById("price-data").textContent);
+const pe = JSON.parse(document.getElementById("pe-data").textContent);
+const q = JSON.parse(document.getElementById("quarterly-data").textContent);
+const eps = JSON.parse(document.getElementById("eps-data").textContent);
+
+const whiteLayout = { template: "plotly_white", xaxis: { rangeslider: { visible: false } } };
+
+// PRICE
+Plotly.newPlot("price-chart", [
+    { 
+        x: price.map(d => d.Date),
+        open: price.map(d => d.Open),
+        high: price.map(d => d.High),
+        low: price.map(d => d.Low),
+        close: price.map(d => d.Close),
+        type: "candlestick",
+        name: "Price"
+    },
+    { x: price.map(d => d.Date), y: price.map(d => d.MA30), type: "scatter", name: "MA30" },
+    { x: price.map(d => d.Date), y: price.map(d => d.MA50), type: "scatter", name: "MA50" }
+], whiteLayout, {responsive: true});
+
+// RSI
+Plotly.newPlot("rsi-chart",
+    [{ x: price.map(d => d.Date), y: price.map(d => d.RSI), type: "scatter" }],
+    { template: "plotly_white", yaxis: { range: [0, 100] } },
+    { responsive: true }
+);
+
+// RS
+Plotly.newPlot("rs-chart",
+    [{ x: price.map(d => d.Date), y: price.map(d => d.RS_Line), type: "scatter" }],
+    { template: "plotly_white" },
+    { responsive: true }
+);
+
+// PE
+if (pe.length) {
+    Plotly.newPlot("pe-chart",
+            [{ x: pe.map(d => d.date), y: pe.map(d => d.pe), type: "scatter" }],
+            { template: "plotly_white" },
+            { responsive: true }
+        );
+}
+
+// Revenue
+if (q.length) {
+    Plotly.newPlot("revenue-chart", [
+            { x: q.map(d => d.quarter), y: q.map(d => d.revenue), type: "bar", name: "Revenue" },
+            { x: q.map(d => d.quarter), y: q.map(d => d.profit), type: "bar", name: "Profit" }
+        ], { template: "plotly_white", barmode: "group" }, { responsive: true });
+}
+
+// EPS
+if (eps.length) {
+    Plotly.newPlot("eps-chart",
+            [{ x: eps.map(d => d.quarter), y: eps.map(d => d.eps), type: "bar" }],
+            { template: "plotly_white" },
+            { responsive: true }
+        );
+}
+</script>
+
+</body>
+</html>
